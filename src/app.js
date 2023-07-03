@@ -46,15 +46,16 @@ app.post("/participants", async (request, response) => {
     if (validacao.err) {
         return response.status(422).send("Participante invalido")
     }
-    
+
     //Novo usúario
-    
-    const nomeExiste = await db.collection("participants").findOne({ name:  name })
-    if (nomeExiste) {
-        return response.status(409).send("Nome de usuário em uso")
-    }
-    
+
     try {
+        const nomeExiste = await db.collection("participants").findOne({ name: name })
+        
+        if (nomeExiste) {
+            return response.status(409).send("Nome de usuário em uso")
+        }
+
         await db.collection("participants").insertOne({
             name: name,
             lastStatus: Date.now()
@@ -67,11 +68,11 @@ app.post("/participants", async (request, response) => {
             type: "status",
             time: dayjs(Date.now()).format('HH:mm:ss')
         })
- 
+
         response.sendStatus(201)
 
     } catch (err) {
-        return response.status(500).send(err.message)
+        return response.status(422).send(err.message)
     }
 })
 
