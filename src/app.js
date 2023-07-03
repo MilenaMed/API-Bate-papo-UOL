@@ -3,6 +3,7 @@ import cors from "cors";
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
 import joi from "joi"
+import dayjs from "dayjs"
 
 const app = express();
 
@@ -40,18 +41,18 @@ const mensagemSchema = joi.object({
 //Post - Participantes
 
 app.post("/participants", async (request, response) => {
-    const name = request.body;
+    const name = request.body
 
     const validacao = participantesSchema.validate(request.body);
     if (validacao.err) {
-        return response.status(422).send("Participante invalido")
+        return response.status(422).send("Participante inválido")
     }
 
     //Novo usúario
 
     try {
         const nomeExiste = await db.collection("participants").findOne({ name: name })
-        
+
         if (nomeExiste) {
             return response.status(409).send("Nome de usuário em uso")
         }
@@ -75,6 +76,17 @@ app.post("/participants", async (request, response) => {
         return response.status(422).send(err.message)
     }
 })
+
+//GET - Participantes
+app.get('/participants', async (request, response) => {
+    try {
+        const usuarios = await db.collection("participants").find().toArray()
+        return response.status(200).send(usuarios)
+    } catch (err) {
+        return response.status(422).send(err.message)
+    }
+})
+
 
 //Porta
 const porta = 5000;
