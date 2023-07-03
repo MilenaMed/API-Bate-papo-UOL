@@ -111,7 +111,7 @@ app.post('/messages', async (request, response) => {
 
         await db.collection("messages").insertOne(mensagemEnviada)
         return response.status(201).send("Mensagem enviada!");
-    
+
     } catch (err) {
         return response.status(500).send(err.message)
     }
@@ -120,14 +120,14 @@ app.post('/messages', async (request, response) => {
 //GET - messages 
 
 app.get('/messages', async (request, response) => {
-    const limit = request.query
+    const { limit } = request.query
     const { user } = request.headers
     const numeroLimite = Number(limit)
 
-    if (limit !== undefined && (numeroLimite <= 0 || isNaN(limit))){
+    if (limit !== undefined && (numeroLimite <= 0 || isNaN(limit))) {
         return response.sendStatus(422)
     }
-    
+
     try {
 
         const mensagens = await db.collection("messages").find({
@@ -135,10 +135,11 @@ app.get('/messages', async (request, response) => {
             { to: { $in: ["Todos", user] } },
             { type: "message" }]
         })
+            .sort(({ $natural: -1 }))
             .limit(limit === undefined ? 0 : numeroLimite)
             .toArray()
 
-        return response.status(200).send([...mensagens].reverse())
+        return response.status(200).send(mensagens)
     } catch (err) {
         return response.status(422).send("Erro: Não foi possível pegar mensagens")
     }
