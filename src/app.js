@@ -13,8 +13,8 @@ app.use(express.json())
 dotenv.config()
 
 //Mongo
-const mongoClient = new MongoClient(process.env.DATABASE_URL);
 
+const mongoClient = new MongoClient(process.env.DATABASE_URL)
 try {
     await mongoClient.connect()
     console.log("Conectou")
@@ -27,13 +27,14 @@ const db = mongoClient.db()
 
 //Joi
 const participantesSchema = joi.object({
-    name: joi.string().required(),
+    name: joi.string().required()
 });
 
 const mensagemSchema = joi.object({
+    from: joi.string().required(),
     to: joi.string().required(),
     text: joi.string().required(),
-    type: joi.string().valid("message", "private_message").required(),
+    type: joi.string().valid("message", "private_message").required()
 });
 
 //Globais
@@ -41,9 +42,9 @@ const mensagemSchema = joi.object({
 //Post - Participantes
 
 app.post("/participants", async (request, response) => {
-    const name = request.body
+    const { name } = request.body
 
-    const validacao = participantesSchema.validate(request.body);
+    const validacao = participantesSchema.validate(request.body, { abortEarly: false });
     if (validacao.error) {
         return response.status(422).send("Participante inválido")
     }
@@ -60,6 +61,7 @@ app.post("/participants", async (request, response) => {
             name: name,
             lastStatus: Date.now()
         })
+
         const mensagemEntrada = {
             from: name,
             to: 'Todos',
@@ -80,9 +82,9 @@ app.post("/participants", async (request, response) => {
 app.get('/participants', async (request, response) => {
     try {
         const usuarios = await db.collection("participants").find().toArray()
-        return response.status(200).send(usuarios)
+        response.status(200).send(usuarios)
     } catch (err) {
-        return response.status(422).send(err.message)
+        return response.status(500).send(err.message)
     }
 })
 
