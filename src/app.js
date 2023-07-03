@@ -91,9 +91,9 @@ app.get('/participants', async (request, response) => {
 //POST - Mensagens
 app.post('/messages', async (request, response) => {
     const mensagemEnviada = request.body;
-    const user = request.headers
+    const { user } = request.headers
 
-    const validacaomensagem = mensagemSchema.validate(mensagemEnviada)
+    const validacaomensagem = mensagemSchema.validate({ mensagemEnviada, from: user })
     if (validacaomensagem.error) {
         return response.status(422).send("Erro na validação da mensagem")
     }
@@ -104,11 +104,13 @@ app.post('/messages', async (request, response) => {
     }
 
     try {
-        await db.collection("messages").insertOne({
-            ...request.body,
+        const mensagem = {
+            mensagemEnviada,
             from: user,
             time: dayjs().format('HH:mm:ss')
-        })
+        }
+
+        await db.collection("messages").insertOne(mensagem)
         return response.status(201).send("Mensagem enviada!");
     } catch (err) {
         return response.status(500).send(err.message)
@@ -118,17 +120,16 @@ app.post('/messages', async (request, response) => {
 //GET - messages 
 
 app.get('/messages', async (request, response) => {
-    const limite = parseInt(request.query.limit)
-    const usuario = request.headers.user
+    const limite = request.query
+    const { user } = request.header
 
     const mensagens = await db.collection("messages").find({
-        $or: [
-            { to: "Todos" },
-            { to: usuario },
-            { from: usuario },
-            { type: "message" }
-        ]
-    }).toArray()
+        $or: [{ from: user },
+        { to: { $in: ["Todos", user] } },
+        { type: "message" }]
+    })
+        .toArray()
+        .limit(limit === undefined ? 0 : Number(limit))
 
     try {
         if (limite) {
@@ -146,5 +147,5 @@ app.get('/messages', async (request, response) => {
 })
 
 //Porta
-const porta = 5000;
+const porta = 5000
 app.listen(porta, () => console.log(`Servidor rodando na porta ${porta}`));
