@@ -145,6 +145,28 @@ app.get('/messages', async (request, response) => {
     }
 })
 
+// POST - Status
+app.post("/status", async (request, response) => {
+    const { user } = request.headers
+
+
+    try {
+        const userExiste = await db.collection("participants").findOne({ name: user })
+        if (!userExiste) {
+            return response.status(404).send("Usuário não encontrado")
+        }
+
+        await db.collection("participants").updateOne(
+            { name: user }, { $set: { lastStatus: Date.now() } }
+        )
+        response.sendStatus(200)
+    } catch (err) {
+        response.status(500).send(err.message)
+    }
+})
+
+
+
 //Porta
 const porta = 5000
 app.listen(porta, () => console.log(`Servidor rodando na porta ${porta}`));
