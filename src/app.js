@@ -90,10 +90,9 @@ app.get('/participants', async (request, response) => {
 
 //POST - Mensagens
 app.post('/messages', async (request, response) => {
-    const mensagemEnviada = request.body;
     const { user } = request.headers
 
-    const validacaomensagem = mensagemSchema.validate({ mensagemEnviada, from: user })
+    const validacaomensagem = mensagemSchema.validate({ ...request.body, from: user })
     if (validacaomensagem.error) {
         return response.status(422).send("Erro na validação da mensagem")
     }
@@ -104,13 +103,13 @@ app.post('/messages', async (request, response) => {
     }
 
     try {
-        const mensagem = {
-            mensagemEnviada,
+        const mensagemEnviada = {
+            ...request.body,
             from: user,
             time: dayjs().format('HH:mm:ss')
         }
 
-        await db.collection("messages").insertOne(mensagem)
+        await db.collection("messages").insertOne(mensagemEnviada)
         return response.status(201).send("Mensagem enviada!");
     } catch (err) {
         return response.status(500).send(err.message)
