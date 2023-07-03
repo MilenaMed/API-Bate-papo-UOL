@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
-import { participantesSchema, mensagemSchema } from "./schemas";
+import joi from "joi"
 
 const app = express();
 
@@ -13,17 +13,27 @@ dotenv.config()
 
 //Mongo
 const mongoClient = new MongoClient(process.env.DATABASE_URL);
-let db;
 
 try {
-    mongoClient.connect()
+    await mongoClient.connect()
     console.log("Conectou")
-    db = mongoClient.db()
-    console.log('Criou')
 }
 catch (err) {
     console.log(err.message)
 }
+
+const db = mongoClient.db()
+
+//Joi
+const participantesSchema = joi.object({
+    name: joi.string().min(1).required(),
+});
+
+const mensagemSchema = joi.object({
+    to: joi.string().required(),
+    text: joi.string().required(),
+    type: joi.string().valid("message", "private_message").required(),
+});
 
 //Globais
 
