@@ -27,7 +27,7 @@ const db = mongoClient.db()
 
 //Joi
 const participantesSchema = joi.object({
-    name: joi.string().min(1).required(),
+    name: joi.string().required(),
 });
 
 const mensagemSchema = joi.object({
@@ -44,7 +44,7 @@ app.post("/participants", async (request, response) => {
     const name = request.body
 
     const validacao = participantesSchema.validate(request.body);
-    if (validacao.err) {
+    if (validacao.error) {
         return response.status(422).send("Participante inválido")
     }
 
@@ -64,16 +64,16 @@ app.post("/participants", async (request, response) => {
 
         await db.collection("messages").insertOne({
             from: name,
-            to: "Todos",
-            text: "entra na sala...",
-            type: "status",
+            to: 'Todos',
+            text: 'entra na sala...',
+            type: 'status',
             time: dayjs(Date.now()).format('HH:mm:ss')
         })
 
         response.sendStatus(201)
 
     } catch (err) {
-        return response.status(422).send(err.message)
+       response.status(422).send(err.message)
     }
 })
 
@@ -86,6 +86,8 @@ app.get('/participants', async (request, response) => {
         return response.status(422).send(err.message)
     }
 })
+
+//POST - Mensagens
 
 
 //Porta
