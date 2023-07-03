@@ -121,24 +121,20 @@ app.post('/messages', async (request, response) => {
 
 app.get('/messages', async (request, response) => {
     const limite = request.query
-    const { user } = request.header
-
-    const mensagens = await db.collection("messages").find({
-        $or: [{ from: user },
-        { to: { $in: ["Todos", user] } },
-        { type: "message" }]
-    })
-        .toArray()
-        .limit(limit === undefined ? 0 : Number(limit))
+    const { user } = request.headers
 
     try {
-        if (limite) {
-            if (limite <= 0 || isNaN(limite)) {
-                return response.status(422).send("Limite inválido")
-            }
-        } else if (limite > 0) {
-            return response.send(mensagens.slice(-limit).reverse())
+        if (limite !== undefined && (Number(limit) <= 0 || isNaN(Number(limit)))) {
+            return response.sendStatus(422)
         }
+
+        const mensagens = await db.collection("messages").find({
+            $or: [{ from: user },
+            { to: { $in: ["Todos", user] } },
+            { type: "message" }]
+        })
+            .toArray()
+            .limit(limit === undefined ? 0 : Number(limit))
 
         return response.status(200).send([...mensagens].reverse())
     } catch (err) {
