@@ -167,14 +167,12 @@ app.post("/status", async (request, response) => {
 
 //Desconectar inativos
 async function remoçãoAutomática() {
-    const users = await db.collection("participants").find().toArray()
-
     try {
-        users.forEach(async dado => {
+        const users = await db.collection("participants").find().toArray()
+        users.forEach(dado => {
             const tempoAtualizado = Date.now() - dado.lastStatus
 
             if (tempoAtualizado > 10000) {
-
                 const mensagemSaida = {
                     from: dado.name,
                     to: "Todos",
@@ -183,9 +181,8 @@ async function remoçãoAutomática() {
                     time: dayjs().format('HH:mm:ss')
                 }
 
-
-                await db.collection("participants").deleteMany({ _id: ObjectId(item._id) })
-                await db.collection("messages").insertMany(mensagemSaida)
+                db.collection("participants").deleteOne({ _id: ObjectId(dado._id) })
+                db.collection("messages").insertOne(mensagemSaida)
             }
         });
     } catch (err) {
