@@ -104,13 +104,14 @@ app.post('/messages', async (request, response) => {
 
     try {
         const mensagemEnviada = {
-            ...request.body,
             from: user,
+            ...request.body,
             time: dayjs().format('HH:mm:ss')
         }
 
         await db.collection("messages").insertOne(mensagemEnviada)
         return response.status(201).send("Mensagem enviada!");
+    
     } catch (err) {
         return response.status(500).send(err.message)
     }
@@ -119,11 +120,12 @@ app.post('/messages', async (request, response) => {
 //GET - messages 
 
 app.get('/messages', async (request, response) => {
-    const limite = request.query
+    const limite = request.query.limit
     const { user } = request.headers
+    const numeroLimite = parseInt(limite)
 
     try {
-        if (limite !== undefined && (Number(limit) <= 0 || isNaN(Number(limit)))) {
+        if (limite !== undefined && (numeroLimite <= 0 || isNaN(limite))){
             return response.sendStatus(422)
         }
 
@@ -133,13 +135,14 @@ app.get('/messages', async (request, response) => {
             { type: "message" }]
         })
             .toArray()
-            .limit(limit === undefined ? 0 : Number(limit))
+            .limit(limit === undefined ? 0 : numeroLimite)
 
         return response.status(200).send([...mensagens].reverse())
     } catch (err) {
         return response.status(422).send("Erro: Não foi possível pegar mensagens")
     }
 })
+
 
 //Porta
 const porta = 5000
