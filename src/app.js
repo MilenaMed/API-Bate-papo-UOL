@@ -168,7 +168,6 @@ app.post("/status", async (request, response) => {
 //Desconectar inativos
 async function remoçãoAutomática() {
     const users = await db.collection("participants").find().toArray()
-    const tempoAtualizado = Date.now() - 1000
 
     try {
         users.forEach(async dado => {
