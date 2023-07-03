@@ -59,19 +59,20 @@ app.post("/participants", async (request, response) => {
         await db.collection("participants").insertOne({
             name: name,
             lastStatus: Date.now()
-    })
-        await db.collection("messages").insertOne({
+        })
+        const mensagemEntrada = {
             from: name,
             to: 'Todos',
             text: 'entra na sala...',
             type: 'status',
             time: dayjs(Date.now()).format('HH:mm:ss')
-        })
+        }
 
+        await db.collection("messages").insertOne(mensagemEntrada)
         response.sendStatus(201)
 
     } catch (err) {
-       response.status(500).send(err.message)
+        response.status(500).send(err.message)
     }
 })
 
@@ -112,6 +113,35 @@ app.post('/messages', async (request, response) => {
     }
 })
 
+//GET - messages 
+
+app.get('/messages', async (request, response) => {
+    const limite = parseInt(request.query.limit)
+    const usuario = request.headers.user
+
+    const mensagens = await db.collection("messages").find({
+        $or: [
+            { to: "Todos" },
+            { to: usuario },
+            { from: usuario },
+            { type: "message" }
+        ]
+    }).toArray()
+
+    try {
+        if (limite) {
+            if (limite <= 0 || isNaN(limite)) {
+                return response.status(422).send("Limite inválido")
+            }
+        } else if (limite > 0) {
+            return response.send(mensagens.slice(-limit).reverse())
+        }
+
+        return response.status(200).send([...mensagens].reverse())
+    } catch (err) {
+        return response.status(422).send("Erro: Não foi possível pegar mensagens")
+    }
+})
 
 //Porta
 const porta = 5000;
