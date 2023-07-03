@@ -51,17 +51,15 @@ app.post("/participants", async (request, response) => {
     //Novo usúario
 
     try {
-        const nomeExiste = await db.collection("participants").findOne({ name: name })
+        const nomeExiste = await db.collection("participants").findOne({ name })
 
         if (nomeExiste) {
             return response.status(409).send("Nome de usuário em uso")
         }
-
         await db.collection("participants").insertOne({
             name: name,
             lastStatus: Date.now()
-        })
-
+    })
         await db.collection("messages").insertOne({
             from: name,
             to: 'Todos',
@@ -73,7 +71,7 @@ app.post("/participants", async (request, response) => {
         response.sendStatus(201)
 
     } catch (err) {
-       response.status(422).send(err.message)
+       response.status(500).send(err.message)
     }
 })
 
@@ -88,6 +86,31 @@ app.get('/participants', async (request, response) => {
 })
 
 //POST - Mensagens
+app.post('/messages', async (request, response) => {
+    const mensagemEnviada = request.body;
+    const user = request.headers
+
+    const validacaomensagem = mensagemSchema.validate(mensagemEnviada)
+    if (validacaomensagem.error) {
+        return response.status(422).send("Erro na validação da mensagem")
+    }
+
+    const nomeExiste = await db.collection("participants").findOne({ name: user })
+    if (!nomeExiste) {
+        return response.status(422).send("Nome de usuário não encontrado")
+    }
+
+    try {
+        await db.collection("messages").insertOne({
+            ...request.body,
+            from: user,
+            time: dayjs().format('HH:mm:ss')
+        })
+        return response.status(201).send("Mensagem enviada!");
+    } catch (err) {
+        return response.status(500).send(err.message)
+    }
+})
 
 
 //Porta
