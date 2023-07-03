@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import dotenv from "dotenv";
 import joi from "joi"
 import dayjs from "dayjs"
@@ -164,6 +164,38 @@ app.post("/status", async (request, response) => {
         response.status(500).send(err.message)
     }
 })
+
+//Desconectar inativos
+async function remoçãoAutomática() {
+    const users = await db.collection("participants").find().toArray()
+    const tempoAtualizado = Date.now() - 1000
+
+    try {
+        users.forEach(async dado => {
+            const tempoAtualizado = Date.now() - dado.lastStatus
+
+            if (tempoAtualizado > 10000) {
+                const mensagemSaida = {
+                    from: dado.name,
+                    to: "Todos",
+                    text: "sai da sala...",
+                    type: "status",
+                    time: dayjs().format('HH:mm:ss')
+                }
+
+
+                await db.collection("participants").deleteOne({ _id: ObjectId(item._id) })
+
+                await db.collection("messages").insertOne(mensagemSaida)
+            }
+        });
+    } catch (err) {
+        response.status(500).send(err.message)
+    }
+
+}
+
+setInterval(remoçãoAutomática, 15000)
 
 
 
