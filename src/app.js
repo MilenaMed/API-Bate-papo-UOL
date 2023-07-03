@@ -175,6 +175,7 @@ async function remoçãoAutomática() {
             const tempoAtualizado = Date.now() - dado.lastStatus
 
             if (tempoAtualizado > 10000) {
+
                 const mensagemSaida = {
                     from: dado.name,
                     to: "Todos",
@@ -184,9 +185,8 @@ async function remoçãoAutomática() {
                 }
 
 
-                await db.collection("participants").deleteOne({ _id: ObjectId(item._id) })
-
-                await db.collection("messages").insertOne(mensagemSaida)
+                await db.collection("participants").deleteMany({ _id: ObjectId(item._id) })
+                await db.collection("messages").insertMany(mensagemSaida)
             }
         });
     } catch (err) {
@@ -196,7 +196,6 @@ async function remoçãoAutomática() {
 }
 
 setInterval(remoçãoAutomática, 15000)
-
 
 
 //Porta
