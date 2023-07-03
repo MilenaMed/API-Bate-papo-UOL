@@ -120,29 +120,29 @@ app.post('/messages', async (request, response) => {
 //GET - messages 
 
 app.get('/messages', async (request, response) => {
-    const limite = request.query.limit
+    const limit = request.query
     const { user } = request.headers
-    const numeroLimite = parseInt(limite)
+    const numeroLimite = Number(limit)
 
+    if (limit !== undefined && (numeroLimite <= 0 || isNaN(limit))){
+        return response.sendStatus(422)
+    }
+    
     try {
-        if (limite !== undefined && (numeroLimite <= 0 || isNaN(limite))){
-            return response.sendStatus(422)
-        }
 
         const mensagens = await db.collection("messages").find({
             $or: [{ from: user },
             { to: { $in: ["Todos", user] } },
             { type: "message" }]
         })
-            .toArray()
             .limit(limit === undefined ? 0 : numeroLimite)
+            .toArray()
 
         return response.status(200).send([...mensagens].reverse())
     } catch (err) {
         return response.status(422).send("Erro: Não foi possível pegar mensagens")
     }
 })
-
 
 //Porta
 const porta = 5000
